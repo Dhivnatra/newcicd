@@ -28,14 +28,24 @@ post{
       always{
             sh 'docker rm -f mypycont'
             sh 'docker run --name mypycont -d -p 3000:5000 my-flask'
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-            mail  to: "dhivyanatarajan@gmail.com",
-                  subject: "Notification mail from Jenkins",
-                  body: "CI/CD pipeline completed successfully.\n\nCheck the application"
-                
-                
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') 
+        script {
+                // Get the console output
+                def consoleOutput = currentBuild.rawBuild.getLog(100).join("\n")
+
+                // Send email with the console output
+                emailext (
+                    to: 'dhivyanatarajan@gmail.com',
+                    subject: "Jenkins Build ${currentBuild.fullDisplayName}",
+                    body: """
+                        <p>Build ${currentBuild.fullDisplayName} has finished with status: ${currentBuild.result}</p>
+                        <p>Console output:</p>
+                        <pre>${consoleOutput}</pre>
+                    """,
+                    mimeType: 'text/html'
+                )
+            }
         }
-}
 
 }
 }
